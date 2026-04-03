@@ -64,13 +64,15 @@ export class UsersService {
     };
   }
 
-  static async getCurrentUser(authHeader: string | undefined | null) {
-    // 1. Validate header
+  private static extractToken(authHeader: string | undefined | null): string {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new Error('Unauthorized');
     }
+    return authHeader.substring(7);
+  }
 
-    const token = authHeader.substring(7); // Remove 'Bearer '
+  static async getCurrentUser(authHeader: string | undefined | null) {
+    const token = this.extractToken(authHeader);
 
     // 2. Join sessions with users to find matching token
     const result = await db
@@ -93,23 +95,20 @@ export class UsersService {
   }
 
   static async logoutUser(authHeader: string | undefined | null) {
-    // 1. Validate header
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new Error('Unauthorized');
-    }
-
-    const token = authHeader.substring(7);
+    const token = this.extractToken(authHeader);
 
     // 2. Delete the session
-    const deleteResult = await db.delete(sessions).where(eq(sessions.token, token));
+    const [deleteResult]: any = await db.delete(sessions).where(eq(sessions.token, token));
 
-    // Note: deleteResult on MySQL might not provide affectedRows directly in the same way as some other adapters,
-    // but Drizzle ORM returns metadata about the operation.
-    // For Drizzle with mysql2, we can check if anything was actually deleted.
+    // Validasi apakah benar-benar ada baris yang terhapus
+    if (deleteResult.affectedRows === 0) {
+      throw new Error('Unauthorized');
+    }
 
     return { data: 'OK' };
   }
 }
+
 
 
 

@@ -2,18 +2,8 @@ import { Elysia, t } from 'elysia';
 import { UsersService } from '../services/users-service';
 
 export const usersRoute = new Elysia({ prefix: '/api' })
-  .post('/users', async ({ body, set }) => {
-    try {
-      const result = await UsersService.registerUser(body);
-      return result;
-    } catch (error: any) {
-      if (error.message === 'Email sudah terdaftar') {
-        set.status = 400;
-        return { error: error.message };
-      }
-      set.status = 500;
-      return { error: 'Internal Server Error' };
-    }
+  .post('/users', async ({ body }) => {
+    return await UsersService.registerUser(body);
   }, {
     body: t.Object({
       name: t.String(),
@@ -21,50 +11,21 @@ export const usersRoute = new Elysia({ prefix: '/api' })
       password: t.String()
     })
   })
-  .post('/users/login', async ({ body, set }) => {
-    try {
-      const result = await UsersService.loginUser(body);
-      return result;
-    } catch (error: any) {
-      if (error.message === 'Invalid email or password') {
-        set.status = 401;
-        return { error: error.message };
-      }
-      set.status = 500;
-      return { error: 'Internal Server Error' };
-    }
+  .post('/users/login', async ({ body }) => {
+    return await UsersService.loginUser(body);
   }, {
     body: t.Object({
       email: t.String(),
       password: t.String()
     })
   })
-  .get('/users/current', async ({ headers, set }) => {
-    try {
-      const result = await UsersService.getCurrentUser(headers.authorization);
-      return result;
-    } catch (error: any) {
-      if (error.message === 'Unauthorized') {
-        set.status = 401;
-        return { error: error.message };
-      }
-      set.status = 500;
-      return { error: 'Internal Server Error' };
-    }
+  .get('/users/current', async ({ headers }) => {
+    return await UsersService.getCurrentUser(headers.authorization);
   })
-  .delete('/users/logout', async ({ headers, set }) => {
-    try {
-      const result = await UsersService.logoutUser(headers.authorization);
-      return result;
-    } catch (error: any) {
-      if (error.message === 'Unauthorized') {
-        set.status = 401;
-        return { error: error.message };
-      }
-      set.status = 500;
-      return { error: 'Internal Server Error' };
-    }
+  .delete('/users/logout', async ({ headers }) => {
+    return await UsersService.logoutUser(headers.authorization);
   });
+
 
 
 
