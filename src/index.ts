@@ -2,7 +2,7 @@ import { Elysia } from 'elysia';
 import { db } from './db';
 import { usersRoute } from './routes/users-route';
 
-const app = new Elysia()
+export const app = new Elysia()
   .onError(({ code, error, set }) => {
     const errorName = (error as any).name;
     const errorMessage = (error as any).message;
