@@ -63,5 +63,34 @@ export class UsersService {
       }
     };
   }
+
+  static async getCurrentUser(authHeader: string | undefined | null) {
+    // 1. Validate header
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('Unauthorized');
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer '
+
+    // 2. Join sessions with users to find matching token
+    const result = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        createdAt: users.createdAt,
+      })
+      .from(sessions)
+      .innerJoin(users, eq(sessions.userId, users.id))
+      .where(eq(sessions.token, token))
+      .limit(1);
+
+    if (result.length === 0) {
+      throw new Error('Unauthorized');
+    }
+
+    return { data: result[0] };
+  }
 }
+
 
