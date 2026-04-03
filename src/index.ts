@@ -3,11 +3,17 @@ import { db } from './db';
 import { usersRoute } from './routes/users-route';
 
 const app = new Elysia()
-  .onError(({ error, set }) => {
+  .onError(({ code, error, set }) => {
     const errorName = (error as any).name;
     const errorMessage = (error as any).message;
 
+    if (code === 'VALIDATION') {
+      set.status = 400;
+      return { error: errorMessage };
+    }
+
     if (errorMessage === 'Unauthorized' || errorMessage === 'Invalid email or password') {
+
 
       set.status = 401;
       return { error: errorMessage };
