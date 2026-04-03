@@ -4,6 +4,13 @@ import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 
 export class UsersService {
+  /**
+   * Mendaftarkan pengguna (user) baru ke dalam sistem.
+   * Fungsi ini mengecek apakah email sudah terdaftar sebelumnya,
+   * lalu melakukan hashing pada kata sandi menggunakan bcrypt, 
+   * dan terakhir menyimpan data user ke tabel `users`.
+   * @throws Error jika email sudah terdaftar.
+   */
   static async registerUser({ name, email, password }: any) {
     // 1. Check if user already exists
     const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
@@ -25,6 +32,13 @@ export class UsersService {
     return { data: 'OK' };
   }
 
+  /**
+   * Mengotentikasi pengguna dan membuat sesi (session) baru.
+   * Fungsi ini memvalidasi keberadaan email, mencocokan password yang di-hash,
+   * lalu membangkitkan token UUID unik yang dicatat ke tabel `sessions`.
+   * @throws Error "Invalid email or password" jika kredensial tidak cocok.
+   * @returns Objek berisi token otorisasi dan identitas dasar pengguna.
+   */
   static async loginUser({ email, password }: any) {
     // 1. Cari user di database
     const existingUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
@@ -64,6 +78,12 @@ export class UsersService {
     };
   }
 
+  /**
+   * Fungsi helper (internal) untuk mengekstrak string token dari header Authorization.
+   * @param authHeader String header Authorization (contoh: "Bearer <token>").
+   * @returns String murni dari token.
+   * @throws Error "Unauthorized" jika header absen atau format tidak menggunakan prefix "Bearer ".
+   */
   private static extractToken(authHeader: string | undefined | null): string {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new Error('Unauthorized');
@@ -71,6 +91,14 @@ export class UsersService {
     return authHeader.substring(7);
   }
 
+  /**
+   * Menarik data profil pengguna yang sedang login (Current User).
+   * Memvalidasi token sesi yang dikirimkan melalui header dan melakukan operasi
+   * JOIN antara tabel `sessions` dan `users` untuk mencari data profil yang sesuai.
+   * @param authHeader String header Authorization.
+   * @returns Data profil user (tanpa password).
+   * @throws Error "Unauthorized" jika token tidak ditemukan di database.
+   */
   static async getCurrentUser(authHeader: string | undefined | null) {
     const token = this.extractToken(authHeader);
 
@@ -94,6 +122,14 @@ export class UsersService {
     return { data: result[0] };
   }
 
+  /**
+   * Menghapus sesi otentikasi (Logout).
+   * Melakukan validasi token lalu menghapus record token tersebut dari tabel `sessions`.
+   * Menggunakan validasi affectedRows MySQL untuk memastikan token yang dihapus benar-benar ada.
+   * @param authHeader String header Authorization.
+   * @returns Konfirmasi string "OK".
+   * @throws Error "Unauthorized" jika token fiktif / tidak ditemukan.
+   */
   static async logoutUser(authHeader: string | undefined | null) {
     const token = this.extractToken(authHeader);
 
