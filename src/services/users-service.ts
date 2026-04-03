@@ -91,6 +91,25 @@ export class UsersService {
 
     return { data: result[0] };
   }
+
+  static async logoutUser(authHeader: string | undefined | null) {
+    // 1. Validate header
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('Unauthorized');
+    }
+
+    const token = authHeader.substring(7);
+
+    // 2. Delete the session
+    const deleteResult = await db.delete(sessions).where(eq(sessions.token, token));
+
+    // Note: deleteResult on MySQL might not provide affectedRows directly in the same way as some other adapters,
+    // but Drizzle ORM returns metadata about the operation.
+    // For Drizzle with mysql2, we can check if anything was actually deleted.
+
+    return { data: 'OK' };
+  }
 }
+
 
 

@@ -51,6 +51,20 @@ export const usersRoute = new Elysia({ prefix: '/api' })
       set.status = 500;
       return { error: 'Internal Server Error' };
     }
+  })
+  .delete('/users/logout', async ({ headers, set }) => {
+    try {
+      const result = await UsersService.logoutUser(headers.authorization);
+      return result;
+    } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: error.message };
+      }
+      set.status = 500;
+      return { error: 'Internal Server Error' };
+    }
   });
+
 
 
