@@ -1,8 +1,24 @@
 import { Elysia } from 'elysia';
 import { db } from './db';
 import { usersRoute } from './routes/users-route';
+import { swagger } from '@elysiajs/swagger';
 
 export const app = new Elysia()
+  .use(swagger({
+    path: '/swagger',
+    documentation: {
+      info: {
+        title: 'Vibe-Coding API Documentation',
+        version: '1.0.0',
+        description: 'Dokumentasi interaktif untuk seluruh endpoint backend Vibe-Coding (ElysiaJS + Bun).'
+      },
+      tags: [
+        { name: 'Auth', description: 'Endpoint untuk registrasi, login, dan logout' },
+        { name: 'User', description: 'Endpoint terkait data profil pengguna' }
+      ]
+    }
+  }))
+
   .onError(({ code, error, set }) => {
     const errorName = (error as any).name;
     const errorMessage = (error as any).message;
